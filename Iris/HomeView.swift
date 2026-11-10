@@ -47,7 +47,7 @@ struct HomeScreen: View {
                 // The first screen fills the viewport, blocks spread out, so Outils starts below the fold.
                 VStack(spacing: 0) {
                 StatusCard(name: glasses.name, mood: mood, battery: glasses.battery, charging: glasses.charging,
-                           worn: glasses.worn, event: event)
+                           worn: glasses.worn, hotspot: glasses.hotspot, event: event)
                     .edEnter()
                 Spacer(minLength: Theme.gap)
                 PrimaryAskButton(listening: glasses.listening || session.phoneListening) {

@@ -24,6 +24,7 @@ struct StatusCard: View {
     let battery: Int?
     let charging: Bool
     let worn: Bool?
+    var hotspot = false
     /// « Double tap · 2 min », already formatted.
     let event: String
 
@@ -35,6 +36,13 @@ struct StatusCard: View {
                 HStack(spacing: 6) {
                     Circle().fill(mood == .off ? Theme.muted : Theme.accent).frame(width: 7, height: 7)
                     Text(mood.label).font(.footnote.weight(.medium)).foregroundStyle(Theme.ink)
+                    if mood != .off {
+                        Image(systemName: hotspot ? "wifi" : "wifi.slash")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(hotspot ? Color.green : Theme.muted)
+                            .contentTransition(.symbolEffect(.replace))
+                            .accessibilityLabel(hotspot ? "Wi-Fi des lunettes allumé" : "Wi-Fi des lunettes éteint")
+                    }
                 }
                 .padding(.horizontal, 10).padding(.vertical, 5)
                 .background(Theme.chip, in: Capsule())

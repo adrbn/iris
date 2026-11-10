@@ -12,6 +12,8 @@ final class Glasses: NSObject, ObservableObject {
     @Published private(set) var battery: Int?
     @Published private(set) var charging = false
     @Published private(set) var lastEvent = ""
+    /// The glasses' own hotspot is up: set by their SSID reply, cleared by 0x44 or a lost link.
+    @Published private(set) var hotspot = false
     /// From the 0x45 status report: [photo, audio, video, …] flags.
     @Published private(set) var recordingSince: Date?
     /// Live view: latest frame, and how it is produced.
@@ -203,7 +205,7 @@ final class Glasses: NSObject, ObservableObject {
             return
         }
         if let b = Proto.battery(m) { battery = b.level; charging = b.charging; return }
-        if let ssid = Proto.wifiSSID(m) { onWifi?(ssid); return }
+        if let ssid = Proto.wifiSSID(m) { hotspot = true; onWifi?(ssid); return }
         if m.cmd == 0x45, m.payload.count >= 3 {
             let recording = m.payload[2] == 1
             if recording, recordingSince == nil { recordingSince = Date() }
@@ -225,7 +227,7 @@ final class Glasses: NSObject, ObservableObject {
         case 0x97: lastEvent = "Je t'écoute…"; listening = true; onVoiceStart?()
         case 0x46: onVoiceData?(Data(m.payload))
         case 0x99, 0x49: lastEvent = "Voix : fin"; listening = false; onVoiceEnd?()
-        case 0x44: lastEvent = "Wi-Fi des lunettes coupé"   // echo of Proto.wifiDone
+        case 0x44: hotspot = false   // echo of Proto.wifiDone
         // Unknown frames stay in the technical journal: a hex code means nothing on the home screen.
         case 0x22, 0x23, 0x24, 0x42, 0x48, 0x59: break
         default: break
@@ -270,6 +272,7 @@ extension Glasses: CBCentralManagerDelegate, CBPeripheralDelegate {
     nonisolated func centralManager(_ c: CBCentralManager, didDisconnectPeripheral p: CBPeripheral, error: Error?) {
         MainActor.assumeIsolated {
             writer = nil
+            hotspot = false
             state = .connecting
             c.connect(p) // iOS keeps this pending until the glasses are back
         }
