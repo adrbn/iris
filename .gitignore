@@ -1,0 +1,4 @@
+.build/
+mac/IrisLive.app/
+scripts/local.env
+dist/
